@@ -4,6 +4,7 @@ A command-line tool to easily develop using [Browsersync](https://browsersync.io
 
 The Service Worker is versioned based on a hash of the static content of the working directory.
 
+
 ## Requirements
 
 Must have a file called `sw.js` in the root of your project containing a line like this one:
@@ -13,6 +14,9 @@ var CURRENT_CACHES = {
   static: 'static-cache-v-98f2739d'  // {STATIC_HASH}
 };
 ```
+
+[See sample usage with a project containing static assets.](https://gist.github.com/cvan/b0b373442a69b298fc05d4a8a8001d5a)
+
 
 ## CLI Usage
 
