@@ -1,0 +1,8 @@
+Usage
+  $ sherpy
+
+Options
+  -h, --help    Show help
+
+Examples
+  $ sherpy
