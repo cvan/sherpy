@@ -1,6 +1,6 @@
 {
   "name": "sherpy",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A command-line tool to easily develop using Browsersync (local dev server, live reloading, remote tunneling) and an offline-first Service Worker for static assets.",
   "bin": "cli.js",
   "repository": "cvan/sherpy",
