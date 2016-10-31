@@ -5,7 +5,6 @@ var fs = require('fs');
 var path = require('path');
 
 var meow = require('meow');
-var objectAssign = require('object-assign');
 
 var sherpy = require('./');
 
@@ -30,17 +29,12 @@ var opts = {
   project: {
     path: path || process.cwd()
   },
-  browsersync: objectAssign({
-    path: process.cwd(),
-    notify: false,
-    open: true,
-    tunnel: true
-  }, {
-    path: cli.input[0],
+  browsersync: {
+    path: path,
     notify: cli.flags.notify,
     open: cli.flags.open,
     tunnel: cli.flags.tunnel
-  }),
+  },
   serviceworker: {
     path: path || process.cwd()
   }
