@@ -118,13 +118,18 @@ module.exports = function (opts) {
     }).catch(console.error.bind(console));
   }
 
+  var isEnabled = function (val) {
+    val = (val || '').trim();
+    return val !== '' && val !== '0' && val !== 'false' && val !== 'off';
+  };
+
   if (opts.browsersync) {
     browserSync({
       server: opts.browsersync.path || process.cwd(),
       files: opts.browsersync.files || [filesWhitelist],
-      notify: 'notify' in opts.browsersync ? opts.browsersync.notify : false,
-      open: 'open' in opts.browsersync ? opts.browsersync.open : true,
-      tunnel: 'tunnel' in opts.browsersync ? opts.browsersync.tunnel : true
+      notify: 'notify' in opts.browsersync ? isEnabled(opts.browsersync.notify) : false,
+      open: 'open' in opts.browsersync ? isEnabled(opts.browsersync.open) : true,
+      tunnel: 'tunnel' in opts.browsersync ? isEnabledopts.browsersync.tunnel) : true
     });
   }
 
