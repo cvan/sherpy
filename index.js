@@ -129,7 +129,7 @@ module.exports = function (opts) {
       files: opts.browsersync.files || [filesWhitelist],
       notify: 'notify' in opts.browsersync ? isEnabled(opts.browsersync.notify) : false,
       open: 'open' in opts.browsersync ? isEnabled(opts.browsersync.open) : true,
-      tunnel: 'tunnel' in opts.browsersync ? isEnabledopts.browsersync.tunnel) : true
+      tunnel: 'tunnel' in opts.browsersync ? isEnabled(opts.browsersync.tunnel) : true
     });
   }
 
