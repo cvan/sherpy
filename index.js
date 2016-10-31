@@ -119,7 +119,7 @@ module.exports = function (opts) {
   }
 
   var isEnabled = function (val) {
-    val = (val || '').trim();
+    val = (val || '').toString().trim();
     return val !== '' && val !== '0' && val !== 'false' && val !== 'off';
   };
 
