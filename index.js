@@ -78,7 +78,7 @@ module.exports = function (opts) {
         }
       });
     });
-  }
+  };
 
   var staticSWHasher = module.exports.staticSWHasher = function () {
     return globHash(globHashOptions)
@@ -116,7 +116,7 @@ module.exports = function (opts) {
         });
       });
     }).catch(console.error.bind(console));
-  }
+  };
 
   var isEnabled = function (val) {
     val = (val || '').toString().trim();
@@ -124,13 +124,27 @@ module.exports = function (opts) {
   };
 
   if (opts.browsersync) {
-    browserSync({
+    var bsPath = opts.browsersync.path || process.cwd();
+
+    var bsConfig;
+    var bsConfigDefaults = {
       server: opts.browsersync.path || process.cwd(),
       files: opts.browsersync.files || [filesWhitelist],
       notify: 'notify' in opts.browsersync ? isEnabled(opts.browsersync.notify) : false,
       open: 'open' in opts.browsersync ? isEnabled(opts.browsersync.open) : true,
       tunnel: 'tunnel' in opts.browsersync ? isEnabled(opts.browsersync.tunnel) : true
-    });
+    };
+    var bsConfigPath = path.join(bsPath, 'bs-config.js');
+
+    try {
+      bsConfig = require(bsConfigPath);
+    } catch (e) {
+      console.warn('Could not load Browsersync config file "%s"', bsConfigPath);
+    }
+
+    Object.assign(bsConfig, bsConfigDefaults, bsConfig);
+
+    browserSync(bsConfig);
   }
 
   if (opts.serviceworker) {

@@ -23,20 +23,20 @@ var cli = meow(usage, {
   }
 });
 
-var path = cli.flags.path || cli.input[0];
+var projectPath = cli.flags.path || cli.input[0];
 
 var opts = {
   project: {
-    path: path || process.cwd()
+    path: projectPath || process.cwd()
   },
   browsersync: {
-    path: path,
+    path: projectPath,
     notify: cli.flags.notify,
     open: cli.flags.open,
     tunnel: cli.flags.tunnel
   },
   serviceworker: {
-    path: path || process.cwd()
+    path: projectPath || process.cwd()
   }
 };
 
