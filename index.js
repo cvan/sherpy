@@ -1,9 +1,24 @@
 const fs = require('fs');
 const path = require('path');
 
-const browserSync = require('browser-sync');
-const globHash = require('glob-hash');
+const electricity = require('electricity');
+const express = require('express');
 const gaze = require('gaze');
+const globHash = require('glob-hash');
+const internalIp = require('internal-ip');
+const posthtmlrc = require('posthtml-load-config');
+const tinylr = require('tiny-lr');
+const yonder = require('yonder');
+
+var app = express();
+
+const IS_DEV = app.get('env') === 'development';
+const PORT_LR = process.env.SHERPY_LR_PORT || process.env.LR_PORT || process.env.PORT || 35729;
+const PORT_SERVER = process.env.SHERPY_PORT || process.env.PORT || 3000;
+const POSTHTML_EXT = '.html';
+const PUBLIC_DIR = path.join(__dirname, IS_DEV ? 'public' : '_prod');
+const ROUTER_PATH = path.join(PUBLIC_DIR, 'ROUTER');
+
 
 module.exports = function (opts) {
   opts = opts || {};
@@ -123,29 +138,70 @@ module.exports = function (opts) {
     return val !== '' && val !== '0' && val !== 'false' && val !== 'off';
   };
 
-  if (opts.browsersync) {
-    var bsPath = opts.browsersync.path || process.cwd();
-
-    var bsConfig;
-    var bsConfigDefaults = {
-      server: opts.browsersync.path || process.cwd(),
-      files: opts.browsersync.files || [filesWhitelist],
-      notify: 'notify' in opts.browsersync ? isEnabled(opts.browsersync.notify) : false,
-      open: 'open' in opts.browsersync ? isEnabled(opts.browsersync.open) : true,
-      tunnel: 'tunnel' in opts.browsersync ? isEnabled(opts.browsersync.tunnel) : true
-    };
-    var bsConfigPath = path.join(bsPath, 'bs-config.js');
-
-    try {
-      bsConfig = require(bsConfigPath);
-    } catch (e) {
-      console.warn('Could not load Browsersync config file "%s"', bsConfigPath);
-    }
-
-    Object.assign(bsConfig, bsConfigDefaults, bsConfig);
-
-    browserSync(bsConfig);
+  // Live-reloading (for local development).
+  // See https://github.com/mklabs/tiny-lr for usage.
+  if (IS_DEV) {
+    app.use(tinylr.middleware({app: app, dashboard: true}));
   }
+  app.initServer = function () {
+    // Serve static files (very similar to how Surge and GitHub Pages do).
+    // See http://expressjs.com/en/starter/static-files.html for usage.
+    return posthtmlrc({ext: POSTHTML_EXT}).then(({plugins, options}) => {
+      var electricityOptions = {
+        'hashify': false,
+        'headers': {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+          'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+        }
+      };
+      if (IS_DEV) {
+        electricityOptions.livereload = {
+          'enabled': true,
+          'listener': tinylr
+        };
+        electricityOptions.posthtml = {
+          'enabled': true,
+          'plugins': plugins,
+          'options': options
+        };
+      }
+      // NOTE: These headers disable the aggressive caching set by `electricity`
+      // (since this server should never run in production anyway).
+      electricityOptions.headers['Cache-Control'] = 'max-age=-1';
+      electricityOptions.headers['Expires'] = '0';
+
+      var serveStatic = electricity.static(PUBLIC_DIR, electricityOptions);
+      app.use(serveStatic);
+
+      // Create server-side redirects (defined in the `ROUTER` file).
+      // See https://github.com/sintaxi/yonder#readme for usage.
+      if (fs.existsSync(ROUTER_PATH)) {
+        app.use(yonder.middleware(ROUTER_PATH));
+      }
+
+      app.use(function (req, res, next) {
+        res.status(404);
+
+        if (req.accepts('html')) {
+          res.sendFile('404.html', {root: PUBLIC_DIR});
+          return;
+        }
+
+        res.type('txt').send('Not found');
+      });
+
+      if (!module.parent) {
+        let listener = app.listen(PORT_SERVER, function () {
+          console.log('Listening on port http://%s:%s', internalIp.v4(), listener.address().port);
+        });
+      }
+
+      return app;
+    }).catch(console.error.bind(console));
+  };
+
+  app.initServer();
 
   if (opts.serviceworker) {
     staticSWHasher();
